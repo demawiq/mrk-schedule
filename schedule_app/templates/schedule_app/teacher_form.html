@@ -1,0 +1,31 @@
+{% extends 'schedule_app/base.html' %}
+
+{% block title %}Редактировать преподавателя - Расписание МРК{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Редактировать преподавателя</h4>
+            </div>
+            <div class="card-body">
+                {% if error_message %}
+                <div class="alert alert-danger">{{ error_message }}</div>
+                {% endif %}
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="name" class="form-label">ФИО преподавателя</label>
+                        <input type="text" name="name" id="name" class="form-control" value="{{ teacher.name }}" required>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'teacher_list' %}" class="btn btn-secondary">Отмена</a>
+                        <button type="submit" class="btn btn-primary">Сохранить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

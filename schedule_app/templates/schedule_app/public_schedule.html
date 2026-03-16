@@ -1,0 +1,176 @@
+{% extends 'schedule_app/base.html' %}
+{% load schedule_extras %}
+
+{% block title %}Просмотр расписания - Расписание МРК{% endblock %}
+
+{% block content %}
+<div class="row mb-4 gy-3 align-items-center">
+    <div class="col-lg-6 col-12">
+        <h2 class="h4 mb-0">Расписание занятий</h2>
+    </div>
+    <div class="col-lg-6 col-12 text-lg-end">
+        <form method="get" class="d-flex flex-wrap gap-2 justify-content-lg-end">
+            <select name="day" class="form-select w-auto flex-grow-1 flex-lg-grow-0" onchange="this.form.submit()">
+                <option value="">Все дни</option>
+                {% for day in days_list %}
+                    <option value="{{ day.code }}" {% if selected_day == day.code %}selected{% endif %}>{{ day.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="group" class="form-select w-auto flex-grow-1 flex-lg-grow-0" onchange="this.form.submit()">
+                <option value="">Выберите группу</option>
+                {% for group in groups %}
+                    <option value="{{ group.id }}" {% if selected_group == group.id %}selected{% endif %}>{{ group.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="teacher" class="form-select w-auto flex-grow-1 flex-lg-grow-0" onchange="this.form.submit()">
+                <option value="">Выберите преподавателя</option>
+                {% for teacher in teachers %}
+                    <option value="{{ teacher.id }}" {% if selected_teacher == teacher.id %}selected{% endif %}>{{ teacher.name }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+</div>
+
+{% if not selected_group and not selected_teacher %}
+<div class="alert alert-primary text-center py-5">
+    <h4>Добро пожаловать!</h4>
+    <p class="mb-0">Пожалуйста, выберите группу или преподавателя, чтобы увидеть расписание.</p>
+</div>
+{% endif %}
+
+{% for day_code, day_info in schedule_data.items %}
+<div class="card mb-4">
+    <div class="card-header py-2 px-3">
+        <h5 class="mb-0 fs-6">{{ day_info.name }}</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+            <table class="table table-bordered mb-0 align-middle text-center" style="min-width: 1000px; table-layout: fixed;">
+                <thead class="table-light text-uppercase small">
+                    <tr>
+                        <th style="width: 80px; background-color: #f8f9fa; position: sticky; left: 0; z-index: 10; border-right: 2px solid #dee2e6;">Гр.</th>
+                        {% for p in period_range %}
+                        <th style="width: 180px; background-color: #f8f9fa;">{{ p }} пара</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for group, grid in day_info.groups.items %}
+                    <tr>
+                        <td class="fw-bold bg-light text-primary small p-1" style="position: sticky; left: 0; z-index: 5; border-right: 2px solid #dee2e6;">{{ group.name }}</td>
+                        {% for p in period_range %}
+                        {% with period_grid=grid|get_item:p %}
+                        {% if not period_grid.is_covered %}
+                        <td class="p-0" style="height: 200px;" colspan="{{ period_grid.colspan }}">
+                            <div class="d-flex h-100 w-100">
+                                {% with lesson1=period_grid|get_item:1 lesson2=period_grid|get_item:2 %}
+                                    {% if lesson1 == lesson2 and lesson1 %}
+                                        {# Полная пара #}
+                                        <div class="lesson-cell flex-grow-1 d-flex flex-column justify-content-center p-3">
+                                            <div class="text-muted mb-1" style="font-size: 0.75rem;">
+                                                {{ lesson1.time|time:"H:i" }}-{{ lesson1.end_time|time:"H:i" }}
+                                            </div>
+                                            <div class="fw-bold text-dark mb-1 lesson-title" title="{{ lesson1.subject.title }}">
+                                                {{ lesson1.subject.title }}
+                                            </div>
+                                            <div class="text-muted mb-1" style="font-size: 0.85rem;">
+                                                {{ lesson1.teacher.name }}
+                                                {% if lesson1.teacher2 %}<br>{{ lesson1.teacher2.name }}{% endif %}
+                                            </div>
+                                            <div class="fw-bold text-primary mb-1" style="font-size: 1rem;">
+                                                {{ lesson1.room }}{% if lesson1.room2 %}, {{ lesson1.room2 }}{% endif %}
+                                            </div>
+                                            {% if lesson1.note %}
+                                            <div class="mt-1 p-1 bg-light border rounded text-start" style="font-size: 0.65rem; font-style: italic;">
+                                                {{ lesson1.note }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    {% else %}
+                                        {# Раздельные часы #}
+                                        <div class="lesson-cell flex-grow-1 flex-basis-0 d-flex flex-column justify-content-center p-2 border-end">
+                                            {% if lesson1 %}
+                                                <div class="text-muted mb-1" style="font-size: 0.65rem;">{{ lesson1.time|time:"H:i" }} - {{ lesson1.end_time|time:"H:i" }}</div>
+                                                <div class="fw-bold text-dark mb-1 lesson-title" style="font-size: 0.8rem;">{{ lesson1.subject.title }}</div>
+                                                <div class="text-muted mb-1" style="font-size: 0.7rem;">
+                                                    {{ lesson1.teacher.name }}
+                                                    {% if lesson1.teacher2 %}<br>{{ lesson1.teacher2.name }}{% endif %}
+                                                </div>
+                                                <div class="fw-bold text-primary mb-1" style="font-size: 0.8rem;">
+                                                    {{ lesson1.room }}{% if lesson1.room2 %}, {{ lesson1.room2 }}{% endif %}
+                                                </div>
+                                                {% if lesson1.note %}
+                                                <div class="mt-1 p-1 bg-light border rounded text-start" style="font-size: 0.6rem; font-style: italic;">{{ lesson1.note }}</div>
+                                                {% endif %}
+                                            {% else %}
+                                                <div class="text-muted small" style="opacity: 0.1;">1ч</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="lesson-cell flex-grow-1 flex-basis-0 d-flex flex-column justify-content-center p-2">
+                                            {% if lesson2 %}
+                                                <div class="text-muted mb-1" style="font-size: 0.65rem;">{{ lesson2.time|time:"H:i" }} - {{ lesson2.end_time|time:"H:i" }}</div>
+                                                <div class="fw-bold text-dark mb-1 lesson-title" style="font-size: 0.8rem;">{{ lesson2.subject.title }}</div>
+                                                <div class="text-muted mb-1" style="font-size: 0.7rem;">
+                                                    {{ lesson2.teacher.name }}
+                                                    {% if lesson2.teacher2 %}<br>{{ lesson2.teacher2.name }}{% endif %}
+                                                </div>
+                                                <div class="fw-bold text-primary mb-1" style="font-size: 0.8rem;">
+                                                    {{ lesson2.room }}{% if lesson2.room2 %}, {{ lesson2.room2 }}{% endif %}
+                                                </div>
+                                                {% if lesson2.note %}
+                                                <div class="mt-1 p-1 bg-light border rounded text-start" style="font-size: 0.6rem; font-style: italic;">{{ lesson2.note }}</div>
+                                                {% endif %}
+                                            {% else %}
+                                                <div class="text-muted small" style="opacity: 0.1;">2ч</div>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                        </td>
+                        {% endif %}
+                        {% endwith %}
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<style>
+    .table-fixed-layout {
+        table-layout: fixed;
+        width: 100%;
+    }
+    .table-responsive::-webkit-scrollbar {
+        height: 8px;
+    }
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: var(--mrk-blue);
+        border-radius: 4px;
+    }
+    .table-responsive::-webkit-scrollbar-track {
+        background: #eee;
+    }
+    .flex-basis-0 {
+        flex-basis: 0;
+        min-width: 0;
+    }
+    .lesson-cell {
+        position: relative;
+        overflow: hidden;
+    }
+    .lesson-title {
+        font-size: 0.95rem;
+        line-height: 1.2;
+        font-weight: 700;
+    }
+    .table-bordered td, .table-bordered th {
+        border: 1px solid #dee2e6 !important;
+    }
+</style>
+{% endblock %}

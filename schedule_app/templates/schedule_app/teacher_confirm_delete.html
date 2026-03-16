@@ -1,0 +1,28 @@
+{% extends 'schedule_app/base.html' %}
+
+{% block title %}Удалить преподавателя - Расписание МРК{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">Подтверждение удаления</h4>
+            </div>
+            <div class="card-body text-center">
+                <p class="lead">Вы уверены, что хотите удалить преподавателя <strong>{{ teacher.name }}</strong>?</p>
+                <div class="alert alert-warning">
+                    <strong>Внимание!</strong> Все занятия, связанные с этим преподавателем, также будут удалены.
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'teacher_list' %}" class="btn btn-secondary">Отмена</a>
+                        <button type="submit" class="btn btn-danger">Да, удалить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,8 @@
+echo "venv/
+__pycache__/
+*.pyc
+db.sqlite3
+.cursor/
+terminals/
+agent-transcripts/
+superuser_credentials.txt" > .gitignore
